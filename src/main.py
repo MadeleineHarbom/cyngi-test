@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
-from pydantic import BaseModel
+import uvicorn
+import debugpy
 
 
 @asynccontextmanager
@@ -13,12 +14,15 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 
-class HostRequest(BaseModel):
-    name: str
-
-
 @app.get("/")
 async def root():
     return {"message": "Hello, world!"}
 
 
+if __name__ == "__main__":
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, log_level="debug")
+
+    debugpy.listen(("0.0.0.0", 5678))
+    print("Waiting for debugger to attach...")
+    debugpy.wait_for_client()
+    print("Debugged attached")
