@@ -12,5 +12,9 @@ class IGameRepository(ABC):
     @abstractmethod
     def get_available_games() -> List[Game]:
         raise NotImplementedError
+    
+    @abstractmethod
+    def get_game_by_id() -> Game:
+        raise NotImplementedError
         
     
