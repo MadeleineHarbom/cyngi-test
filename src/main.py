@@ -6,7 +6,8 @@ import debugpy
 from pydantic import BaseModel
 
 from src.interfaces.singleton import singleton
-from src.models import GameList
+from src.models.GameList import GameList
+from src.models.User import User
 from src.models.Game import Game
 from src.repositories.gameRepository import GameRepository
 
@@ -42,24 +43,27 @@ async def get_games(repo:GameRepository=Depends(GameRepository)):
     return {"games": games}
 
 
-
 @app.post("/host")
 async def host(host:UserRequest, repo:GameRepository=Depends(GameRepository) )-> UserResponse:
-    game:Game = Game(host.name)
-    print(game)
-    print(game.id)
+    host:User = User(host.name)
+    game:Game = Game(host)
     success:bool = repo.save_game(game)
     if success:
-        return UserResponse(token=game.host.id, game= game.id)
+        return UserResponse(token=host.id, game= game.id)
     else:
         raise HTTPException(status_code=500, detail="Internal Server Error")
     
 @app.post("/join/{game_id}")
 async def join(game_id:str ,player:UserRequest, repo:GameRepository=Depends(GameRepository)) -> UserResponse:
     game:Game = repo.get_game_by_id(game_id)
-    game.join(player.name)
-    return {"token": str(game.player.id), "game": str(game.id)}
+    user:User = User(player.name)
+    game.join(user)
+    return {"token": str(user.id), "game": str(game.id)}
 
+
+@app.post("play/{game_id}")
+async def play(game_id:str):
+    pass
     
 
 if __name__ == "__main__":

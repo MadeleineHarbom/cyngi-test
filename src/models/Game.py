@@ -1,20 +1,33 @@
-from typing import Optional
+from typing import Dict, Optional
 import uuid
+from src.constants.states import GameState
+from src.constants.hands import Hand
+from src.models.User import User
 
 class Game:
-    def __init__(self, hostname:str):
-        self.host:User = User(hostname)
-        self.player:Optional[User] = None
+    def __init__(self, host:User):
+        self.users:Dict[str, User] = {host.id: host}
+        self.host = host.id
         self.id:str = str(uuid.uuid4())
+        self.state:GameState = GameState.WAITING_FOR_PLAYER
 
     def join(self, playername:str):
         self.player = User(playername)
+        self.state = GameState.READY
 
-    def __str__(self):
-        return f"Game(id={self.id}, host=User(id={self.host.id}, {self.host.name}), player=User(id={self.player.id}, {self.player.name}))" if self.player else f"Game(id={self.id}, host=User(id={self.host.id}, {self.host.name}))"
+    def play(self, user_id:str, choice:Hand):
+        if self.state == GameState.READY:
+            self.state = GameState.WAITING_FOR_ACTION
+        elif self.state == GameState.WAITING_FOR_ACTION:
+            self.state = GameState.READY
 
-class User(Game):
-    def __init__(self, name:str):
-        self.id:str = str(uuid.uuid4()) 
-        self.name:str = name
+
+
+class Round(Game):
+    hosthand:Hand = Hand.UNSET
+    playerhand:Hand = Hand.UNSET
+    
+    def __init__(self):
+        pass
+   
 

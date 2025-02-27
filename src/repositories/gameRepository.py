@@ -1,4 +1,5 @@
 from typing import List
+from src.constants.states import GameState
 from src.interfaces.singleton import singleton
 from src.interfaces.IGameRepository import IGameRepository
 
@@ -24,13 +25,10 @@ class GameRepository(IGameRepository):
         
 
     def get_available_games(self) -> GameList:
-        print("get available games")
-        print([game for game in self.games if game.player is None])
-        return GameList([game for game in self.games if game.player is None])
+        return GameList([game for game in self.games if game.state is GameState.WAITING_FOR_PLAYER])
     
     
     def get_game_by_id(self, id:str) -> Game:
-        print(f"Collecting game with id {id}")
         for game in self.games:
             if game.id == id:
                 return game

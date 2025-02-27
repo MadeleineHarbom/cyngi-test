@@ -1,15 +1,21 @@
 
 
 from src.models.Game import Game
+from src.models.User import User
 
 def test_create_game():
-    game:Game = Game("Madeleine")
-    assert game.host.name == "Madeleine"
+    host:User = User("Jonathan")
+    game:Game = Game(host)
+    assert game.users.get(host.id).name == "Jonathan"
+    assert game.host == host.id
 
-
+'''
 def test_join_game():
-    game:Game = Game("Player1")
-    game.join("Player2")
+    host:User = User("Kurt", host=True)
+    game:Game = Game(host)
+    player:User = User("Linnea")
+    game.join(player)
 
-    assert game.host.name == "Player1"
-    assert game.player.name == "Player2"
+    assert game.users.get(host.id).name == "Kurt"
+    assert game.users.get(player.id).name == "Linnea"
+    '''

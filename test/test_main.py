@@ -50,3 +50,6 @@ def test_join_game():
 def test_get_games():
     #mock the repo
     pass
+
+def get_state():
+    pass
