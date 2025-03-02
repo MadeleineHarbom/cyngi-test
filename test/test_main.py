@@ -1,5 +1,6 @@
 from fastapi.testclient import TestClient
 import pytest
+from src.constants.states import GameState
 from src.main import app
 from src.models import Game
 from src.repositories.gameRepository import GameRepository
@@ -48,8 +49,20 @@ def test_join_game():
     assert response.status_code == 200
 
 def test_get_games():
-    #mock the repo
+    #TODO ock the repo
     pass
 
 def get_state():
-    pass
+    request_body = {
+        "name": "Eric"
+    }
+    response = client.post("/host", json=request_body)
+    game_id:str = response.json()["game"]
+    response = client.get(f"/state/{game_id}")
+    assert response.json()["State"] == GameState.WAITING_FOR_PLAYER
+    request_body = {
+        "name": "Frederike"
+    }
+    response = client.post(f"/join/{game_id}", json=request_body)
+    response = client.get(f"/state/{game_id}")
+    assert response.json()["State"] == GameState.READY

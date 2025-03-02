@@ -25,7 +25,7 @@ class GameRepository(IGameRepository):
         
 
     def get_available_games(self) -> GameList:
-        return GameList([game for game in self.games if game.state is GameState.WAITING_FOR_PLAYER])
+        return GameList([game for game in self.games if game._state is GameState.WAITING_FOR_PLAYER])
     
     
     def get_game_by_id(self, id:str) -> Game:

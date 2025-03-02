@@ -2,7 +2,6 @@ import uuid
 
 class User():
     def __init__(self, name:str):
-        print("user init")
         self.id:str = str(uuid.uuid4()) 
         self.name:str = name
 

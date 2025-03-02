@@ -1,10 +1,11 @@
 from typing import List
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Header
 from contextlib import asynccontextmanager
 import uvicorn
 import debugpy
 from pydantic import BaseModel
 
+from src.constants.hands import Hand
 from src.interfaces.singleton import singleton
 from src.models.GameList import GameList
 from src.models.User import User
@@ -24,12 +25,19 @@ app = FastAPI(lifespan=lifespan)
 class UserRequest(BaseModel):
     name: str
 
+
+class PlayRequest(BaseModel):
+    move: int
+
 class UserResponse(BaseModel):
     token:str
     game:str
 
 #class GamesResponse(BaseModel):
 #    games:List[Game]
+
+class StateResponse(BaseModel):
+    state: int
 
 @app.get("/")
 async def get_root():
@@ -53,17 +61,36 @@ async def host(host:UserRequest, repo:GameRepository=Depends(GameRepository) )->
     else:
         raise HTTPException(status_code=500, detail="Internal Server Error")
     
+    
 @app.post("/join/{game_id}")
 async def join(game_id:str ,player:UserRequest, repo:GameRepository=Depends(GameRepository)) -> UserResponse:
     game:Game = repo.get_game_by_id(game_id)
     user:User = User(player.name)
     game.join(user)
-    return {"token": str(user.id), "game": str(game.id)}
+    return {"token": str(user.id), "game": game.id}
 
 
 @app.post("play/{game_id}")
-async def play(game_id:str):
-    pass
+async def play(game_id:str, hand:Hand, token: str = Header(None)):
+    if token is None:
+        raise HTTPException(status_code=400, detail="Token is required")
+    try:
+        repo:GameRepository = GameRepository()
+        game:Game = repo.get_game_by_id(game_id)
+        game.play(token,hand)
+    except KeyError:
+        raise HTTPException(status_code=400, detail="No such game")
+    
+
+@app.get("/state/{game_id}")
+async def state(game_id:str) -> StateResponse:
+    try:
+        repo:GameRepository = GameRepository()
+        game:Game = repo.get_game_by_id(game_id)
+        return {"state": game.get_state()}
+    except KeyError:
+        raise HTTPException(status_code=400, detail="No such game")
+
     
 
 if __name__ == "__main__":
