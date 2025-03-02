@@ -26,6 +26,9 @@ class Game:
         
     def get_state(self) -> GameState:
         return self._state
+    
+    def get_host_name(self) -> str:
+        return self.users.get(self.host).name
 
     def play(self, user_id:str, choice:Hand) -> Optional[str]:
         self.validate_user(user_id)

@@ -7,7 +7,6 @@ from pydantic import BaseModel
 
 from src.constants.hands import Hand
 from src.interfaces.singleton import singleton
-from src.models.GameList import GameList
 from src.models.User import User
 from src.models.Game import Game
 from src.repositories.gameRepository import GameRepository
@@ -33,8 +32,9 @@ class UserResponse(BaseModel):
     token:str
     game:str
 
-#class GamesResponse(BaseModel):
-#    games:List[Game]
+class GamesResponse(BaseModel):
+    name:str
+    id:str
 
 class StateResponse(BaseModel):
     state: int
@@ -45,10 +45,10 @@ async def get_root():
 
 
 @app.get("/games")
-async def get_games(repo:GameRepository=Depends(GameRepository)):
+async def get_games(repo:GameRepository=Depends(GameRepository)) -> List[GamesResponse]:
     repo:GameRepository = GameRepository()
-    games:GameList = repo.get_available_games()
-    return {"games": games}
+    games:List[Game] = repo.get_available_games()
+    return [{"id": game.id, "name": game.get_host_name()} for game in games]
 
 
 @app.post("/host")

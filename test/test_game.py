@@ -18,9 +18,6 @@ def test_join_game():
     game:Game = Game(host)
     player:User = User("Linnea")
     game.join(player)
-    print(game.users.__len__())
-    print(game.users.get(host.id).name)
-    print(game.users.get(player.id))
     assert game.users.get(host.id).name == "Kurt"
     assert game.users.get(player.id).name == "Linnea"
 

@@ -3,7 +3,6 @@ from src.constants.states import GameState
 from src.interfaces.singleton import singleton
 from src.interfaces.IGameRepository import IGameRepository
 
-from src.models.GameList import GameList
 from src.models.Game import Game
 
 @singleton
@@ -17,15 +16,13 @@ class GameRepository(IGameRepository):
     def save_game(self, game:Game) -> bool:
         try:
             self.games.append(game)
-            print(f"Saved game")
-            print(game)
             return True
         except:
             return False
         
 
-    def get_available_games(self) -> GameList:
-        return GameList([game for game in self.games if game._state is GameState.WAITING_FOR_PLAYER])
+    def get_available_games(self) -> List[Game]:
+        return [game for game in self.games if game._state is GameState.WAITING_FOR_PLAYER]
     
     
     def get_game_by_id(self, id:str) -> Game:
