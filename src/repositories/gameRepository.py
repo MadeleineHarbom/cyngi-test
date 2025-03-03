@@ -7,7 +7,9 @@ from src.models.Game import Game
 
 @singleton
 class GameRepository(IGameRepository):
-    games:List[Game] = []
+    games:List[Game] = [] 
+    #array for simplisity and limiting scope
+    #Can be exchanged for a database
 
     def __init__(self):
         print('Game repo init')
@@ -22,7 +24,7 @@ class GameRepository(IGameRepository):
         
 
     def get_available_games(self) -> List[Game]:
-        return [game for game in self.games if game._state is GameState.WAITING_FOR_PLAYER]
+        return [game for game in self.games if game.state is GameState.WAITING_FOR_PLAYER.value]
     
     
     def get_game_by_id(self, id:str) -> Game:

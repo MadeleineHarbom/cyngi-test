@@ -27,10 +27,10 @@ def test_join_game():
 def test_play_hand():
     host:Player = Player('Oskar')
     game:Game = Game(host)
-    assert game.get_state() == GameState.WAITING_FOR_PLAYER
+    assert game.state == GameState.WAITING_FOR_PLAYER.value
     player:Player = Player("Patrick")
     game.join(player)
-    assert game.get_state() == GameState.READY
+    assert game.state == GameState.READY.value
 
 
 def test_set_winner():
@@ -63,13 +63,13 @@ def test_game_state():
     host:Player = Player('Thor')
     player:Player = Player('Uwe')
     game:Game = Game(host)
-    assert game.get_state() == GameState.WAITING_FOR_PLAYER
+    assert game.state == GameState.WAITING_FOR_PLAYER.value
     game.join(player)
-    assert game.get_state() == GameState.READY
+    assert game.state == GameState.READY.value
     game.play(player.id, Hand.ROCK)
-    assert game.get_state() == GameState.WAITING_FOR_ACTION
+    assert game.state == GameState.WAITING_FOR_ACTION.value
     game.play(host.id, Hand.SCISSORS)
-    assert game.get_state() == GameState.READY
+    assert game.state == GameState.READY.value
 
 def test_double_turn_error():
     host:Player = Player('Clause')

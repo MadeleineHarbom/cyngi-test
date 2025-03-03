@@ -3,19 +3,31 @@ import uuid
 from src.constants.states import GameState
 from src.constants.hands import Hand
 from src.models.Player import Player
+from transitions import Machine, State
 
 class Game:
     def __init__(self, host:Player):
         self.users:Dict[str, Player] = {host.id: host}
         self.host = host.id
         self.id:str = str(uuid.uuid4())
-        self._state:GameState = GameState.WAITING_FOR_PLAYER
+        #self._state:GameState = GameState.WAITING_FOR_PLAYER
         self.previous_rounds:List[Round] = []
         self.active_round = None
 
+        states:List[str] = [state.value for state in GameState]
+        self.machine= Machine(model=self, states=states, initial=GameState.WAITING_FOR_PLAYER.value)
+
+        self.machine.add_transition('join', GameState.WAITING_FOR_PLAYER.value, GameState.READY.value)
+        self.machine.add_transition('play', GameState.READY.value, GameState.WAITING_FOR_ACTION.value)
+        self.machine.add_transition('play', GameState.WAITING_FOR_ACTION.value, GameState.READY.value)
+        self.machine.add_transition('leave_game', GameState.WAITING_FOR_PLAYER.value, GameState.TEMINATED.value)
+        self.machine.add_transition('leave_game', GameState.READY.value, GameState.COMPLETED.value)
+
+
     def join(self, player:Player):
         self.users[player.id] = player
-        self._state = GameState.READY
+        self.trigger('join') 
+        #self._state = GameState.READY
 
 
     def validate_user(self, user_id):
@@ -24,39 +36,42 @@ class Game:
         except:
             raise PermissionError('User not in game')
         
-    def get_state(self) -> GameState:
-        return self._state
     
     def get_host_name(self) -> str:
         return self.users.get(self.host).name
 
     def play(self, user_id:str, choice:Hand) -> Optional[str]:
         self.validate_user(user_id)
-        if self._state == GameState.READY:
+        if self.state == GameState.READY.value:
             self.active_round = Round(user_id, choice)
-            self._state = GameState.WAITING_FOR_ACTION
-        elif self._state == GameState.WAITING_FOR_ACTION:
+            self.trigger('play')
+        elif self.state == GameState.WAITING_FOR_ACTION.value:
             played:bool = self.active_round.play(user_id, choice)
             if played:
                 winner_id:str = self.active_round.winner
                 self.previous_rounds.append(self.active_round)
                 self.active_round = None
-                self._state = GameState.READY
+                self.trigger('play')
                 return winner_id
 
 
+
     def leave_game(self, user_id:str):
-        #TODO implement
         self.validate_user(user_id)
-        if self._state == GameState.WAITING_FOR_PLAYER:
-            self._state = GameState.TEMINATED
-        else:
-            self.active_round = None
-            self._state = GameState.COMPLETED
+        #if self._state == GameState.WAITING_FOR_PLAYER:
+        #    self._state = GameState.TEMINATED
+        #else:
+        #    self.active_round = None
+        #   self._state = GameState.COMPLETED
+    '''
+    def terminate(self):
+        pass
 
+    def conclude(self):
+        pass
+    '''
 
-
-class Round(Game): 
+class Round: 
     def __init__(self, user_id: str, choice:Hand):
         self.hands:Dict[str, Hand] = {user_id: choice}
         self.winner = None
