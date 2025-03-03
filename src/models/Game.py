@@ -2,18 +2,18 @@ from typing import Dict, List, Optional
 import uuid
 from src.constants.states import GameState
 from src.constants.hands import Hand
-from src.models.User import User
+from src.models.Player import Player
 
 class Game:
-    def __init__(self, host:User):
-        self.users:Dict[str, User] = {host.id: host}
+    def __init__(self, host:Player):
+        self.users:Dict[str, Player] = {host.id: host}
         self.host = host.id
         self.id:str = str(uuid.uuid4())
         self._state:GameState = GameState.WAITING_FOR_PLAYER
         self.previous_rounds:List[Round] = []
         self.active_round = None
 
-    def join(self, player:User):
+    def join(self, player:Player):
         self.users[player.id] = player
         self._state = GameState.READY
 
@@ -22,7 +22,7 @@ class Game:
         try:
             self.users[user_id]
         except:
-            raise KeyError("No user found")
+            raise PermissionError('User not in game')
         
     def get_state(self) -> GameState:
         return self._state
@@ -34,9 +34,7 @@ class Game:
         self.validate_user(user_id)
         if self._state == GameState.READY:
             self.active_round = Round(user_id, choice)
-            self.active_round.play(user_id, choice)
             self._state = GameState.WAITING_FOR_ACTION
-            return None
         elif self._state == GameState.WAITING_FOR_ACTION:
             played:bool = self.active_round.play(user_id, choice)
             if played:
@@ -48,12 +46,14 @@ class Game:
 
 
     def leave_game(self, user_id:str):
+        #TODO implement
         self.validate_user(user_id)
         if self._state == GameState.WAITING_FOR_PLAYER:
             self._state = GameState.TEMINATED
         else:
             self.active_round = None
             self._state = GameState.COMPLETED
+
 
 
 class Round(Game): 
@@ -88,14 +88,11 @@ class Round(Game):
             return player2
         
 
-        
-
-    def _validate_user(self, user_id:str):
+    def _validate_user(self, user_id:str) -> bool:
         if self.hands.get(user_id, None):
-            return False
+            raise PermissionError("User already played this turn")
         else:
             return True
 
 
-        
 

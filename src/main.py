@@ -1,4 +1,5 @@
-from typing import List
+from configparser import Error
+from typing import List, Optional
 from fastapi import Depends, FastAPI, HTTPException, Header
 from contextlib import asynccontextmanager
 import uvicorn
@@ -7,8 +8,10 @@ from pydantic import BaseModel
 
 from src.constants.hands import Hand
 from src.interfaces.singleton import singleton
-from src.models.User import User
+from src.models.Player import Player
 from src.models.Game import Game
+from src.models.requests import PlayRequest, UserRequest
+from src.models.responses import GamesResponse, StateResponse, UserResponse
 from src.repositories.gameRepository import GameRepository
 
 
@@ -21,23 +24,6 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-class UserRequest(BaseModel):
-    name: str
-
-
-class PlayRequest(BaseModel):
-    move: int
-
-class UserResponse(BaseModel):
-    token:str
-    game:str
-
-class GamesResponse(BaseModel):
-    name:str
-    id:str
-
-class StateResponse(BaseModel):
-    state: int
 
 @app.get("/")
 async def get_root():
@@ -53,7 +39,7 @@ async def get_games(repo:GameRepository=Depends(GameRepository)) -> List[GamesRe
 
 @app.post("/host")
 async def host(host:UserRequest, repo:GameRepository=Depends(GameRepository) )-> UserResponse:
-    host:User = User(host.name)
+    host:Player = Player(host.name)
     game:Game = Game(host)
     success:bool = repo.save_game(game)
     if success:
@@ -64,22 +50,33 @@ async def host(host:UserRequest, repo:GameRepository=Depends(GameRepository) )->
     
 @app.post("/join/{game_id}")
 async def join(game_id:str ,player:UserRequest, repo:GameRepository=Depends(GameRepository)) -> UserResponse:
-    game:Game = repo.get_game_by_id(game_id)
-    user:User = User(player.name)
-    game.join(user)
-    return {"token": str(user.id), "game": game.id}
+    try:
+        game:Game = repo.get_game_by_id(game_id)
+        user:Player = Player(player.name)
+        game.join(user)
+        return {"token": str(user.id), "game": game.id}
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Error as e:
+        print(e)
 
 
-@app.post("play/{game_id}")
-async def play(game_id:str, hand:Hand, token: str = Header(None)):
+@app.post("/play/{game_id}")
+async def play(game_id:str, body:PlayRequest, token: str = Header(None)):
     if token is None:
         raise HTTPException(status_code=400, detail="Token is required")
     try:
+        hand:int = body.move
         repo:GameRepository = GameRepository()
         game:Game = repo.get_game_by_id(game_id)
-        game.play(token,hand)
-    except KeyError:
-        raise HTTPException(status_code=400, detail="No such game")
+        play:Optional[str] = game.play(token,hand)
+        #TODO fix this
+    except KeyError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except PermissionError as e:
+        raise HTTPException(status_code=401, detail=str(e))
+    except Error as e:
+        print(e)
     
 
 @app.get("/state/{game_id}")
@@ -88,8 +85,8 @@ async def state(game_id:str) -> StateResponse:
         repo:GameRepository = GameRepository()
         game:Game = repo.get_game_by_id(game_id)
         return {"state": game.get_state()}
-    except KeyError:
-        raise HTTPException(status_code=400, detail="No such game")
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=str(e))
 
     
 
