@@ -1,9 +1,9 @@
 from typing import List
 from src.constants.states import GameState
-from src.interfaces.singleton import singleton
-from src.interfaces.IGameRepository import IGameRepository
+from src.utils.singleton import singleton
+from src.interfaces.igame_repository import IGameRepository
 
-from src.models.Game import Game
+from src.models.game import Game
 
 @singleton
 class GameRepository(IGameRepository):
@@ -16,11 +16,9 @@ class GameRepository(IGameRepository):
 
 
     def save_game(self, game:Game) -> bool:
-        try:
-            self.games.append(game)
-            return True
-        except:
-            return False
+        self.games.append(game)
+        return True
+  
         
 
     def get_available_games(self) -> List[Game]:

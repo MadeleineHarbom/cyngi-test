@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List
 
-from src.models.Game import Game
+from src.models.game import Game
 
 
 class IGameRepository(ABC):

@@ -10,4 +10,4 @@ class GamesResponse(BaseModel):
     id:str
 
 class StateResponse(BaseModel):
-    state: int
+    state: str

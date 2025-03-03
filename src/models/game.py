@@ -2,7 +2,7 @@ from typing import Dict, List, Optional
 import uuid
 from src.constants.states import GameState
 from src.constants.hands import Hand
-from src.models.Player import Player
+from src.models.player import Player
 from transitions import Machine, State
 
 class Game:
@@ -17,16 +17,16 @@ class Game:
         states:List[str] = [state.value for state in GameState]
         self.machine= Machine(model=self, states=states, initial=GameState.WAITING_FOR_PLAYER.value)
 
-        self.machine.add_transition('join', GameState.WAITING_FOR_PLAYER.value, GameState.READY.value)
-        self.machine.add_transition('play', GameState.READY.value, GameState.WAITING_FOR_ACTION.value)
-        self.machine.add_transition('play', GameState.WAITING_FOR_ACTION.value, GameState.READY.value)
+        self.machine.add_transition('join_game', GameState.WAITING_FOR_PLAYER.value, GameState.READY.value)
+        self.machine.add_transition('play_hand', GameState.READY.value, GameState.WAITING_FOR_ACTION.value)
+        self.machine.add_transition('play_hand', GameState.WAITING_FOR_ACTION.value, GameState.READY.value)
         self.machine.add_transition('leave_game', GameState.WAITING_FOR_PLAYER.value, GameState.TEMINATED.value)
         self.machine.add_transition('leave_game', GameState.READY.value, GameState.COMPLETED.value)
 
 
     def join(self, player:Player):
         self.users[player.id] = player
-        self.trigger('join') 
+        self.trigger('join_game') 
         #self._state = GameState.READY
 
 
@@ -44,32 +44,22 @@ class Game:
         self.validate_user(user_id)
         if self.state == GameState.READY.value:
             self.active_round = Round(user_id, choice)
-            self.trigger('play')
+            self.trigger('play_hand')
         elif self.state == GameState.WAITING_FOR_ACTION.value:
             played:bool = self.active_round.play(user_id, choice)
             if played:
                 winner_id:str = self.active_round.winner
                 self.previous_rounds.append(self.active_round)
                 self.active_round = None
-                self.trigger('play')
+                self.trigger('play_hand')
                 return winner_id
 
 
 
-    def leave_game(self, user_id:str):
+    def leave(self, user_id:str) -> bool:
         self.validate_user(user_id)
-        #if self._state == GameState.WAITING_FOR_PLAYER:
-        #    self._state = GameState.TEMINATED
-        #else:
-        #    self.active_round = None
-        #   self._state = GameState.COMPLETED
-    '''
-    def terminate(self):
-        pass
-
-    def conclude(self):
-        pass
-    '''
+        self.trigger('leave_game')
+        return True
 
 class Round: 
     def __init__(self, user_id: str, choice:Hand):
@@ -105,7 +95,7 @@ class Round:
 
     def _validate_user(self, user_id:str) -> bool:
         if self.hands.get(user_id, None):
-            raise PermissionError("User already played this turn")
+            raise PermissionError('User already played this turn')
         else:
             return True
 

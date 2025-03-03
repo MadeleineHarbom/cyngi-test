@@ -6,5 +6,5 @@ class Player():
         self.name:str = name
 
     def __str__(self):
-        return f"User(id: {self.id}, name: {self.name})"
+        return f'User(id: {self.id}, name: {self.name})'
 

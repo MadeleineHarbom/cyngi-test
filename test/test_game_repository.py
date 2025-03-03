@@ -1,7 +1,6 @@
-from typing import List
 from src.constants.hands import Hand
-from src.models.Player import Player
-from src.models.Game import Game
+from src.models.player import Player
+from src.models.game import Game
 from src.repositories.gameRepository import GameRepository
 import pytest
 import uuid
@@ -14,11 +13,11 @@ def repo():
     repo.games.clear()
 
 def test_save_game(repo:GameRepository):
-    game:Game = Game(Player("Madeleine"))
+    game:Game = Game(Player('Madeleine'))
     success:bool = repo.save_game(game)
     assert success == True
     assert repo.games.__len__() == 1
-    another_game = Game(Player("Nina"))
+    another_game = Game(Player('Nina'))
     another_success:bool = repo.save_game(another_game)
     assert another_success == True
     assert repo.games.__len__() == 2
@@ -29,13 +28,13 @@ def test_get_available_games(repo:GameRepository):
     host2:Player = Player('Adam')
     player1:Player = Player('Francis')
     player2:Player = Player('Gunilla')
-    game1:Game = Game(Player("Bertram"))
+    game1:Game = Game(Player('Bertram'))
     repo.save_game(game1)
     game2:Game = Game(host2)
     repo.save_game(game2)
-    game3:Game = Game(Player("Carl"))
+    game3:Game = Game(Player('Carl'))
     repo.save_game(game3)
-    game4:Game = Game(Player("Douglas"))
+    game4:Game = Game(Player('Douglas'))
     repo.save_game(game4)
 
     assert repo.get_available_games().__len__() == 4
@@ -64,11 +63,11 @@ def test_get_game_by_id_exception(repo:GameRepository):
 
 
 def test_get_games(repo:GameRepository):
-    game1:Game = Game(Player("Veronika"))
+    game1:Game = Game(Player('Veronika'))
     repo.save_game(game1)
-    game2:Game = Game(Player("Xander"))
+    game2:Game = Game(Player('Xander'))
     repo.save_game(game2)
-    game3:Game = Game(Player("Yuri"))
+    game3:Game = Game(Player('Yuri'))
     repo.save_game(game3)
     assert repo.get_available_games().__len__() == 3
     game3.join(Player('Zoe'))
