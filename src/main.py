@@ -32,7 +32,6 @@ async def get_root():
 
 @app.get("/games")
 async def get_games(repo:GameRepository=Depends(GameRepository)) -> List[GamesResponse]:
-    repo:GameRepository = GameRepository()
     games:List[Game] = repo.get_available_games()
     return [{"id": game.id, "name": game.get_host_name()} for game in games]
 
@@ -62,12 +61,11 @@ async def join(game_id:str ,player:UserRequest, repo:GameRepository=Depends(Game
 
 
 @app.post("/play/{game_id}")
-async def play(game_id:str, body:PlayRequest, token: str = Header(None)):
+async def play(game_id:str, body:PlayRequest, token: str = Header(None), repo:GameRepository=Depends(GameRepository)):
     if token is None:
         raise HTTPException(status_code=400, detail="Token is required")
     try:
         hand:int = body.move
-        repo:GameRepository = GameRepository()
         game:Game = repo.get_game_by_id(game_id)
         play:Optional[str] = game.play(token,hand)
         #TODO fix this
@@ -80,9 +78,8 @@ async def play(game_id:str, body:PlayRequest, token: str = Header(None)):
     
 
 @app.get("/state/{game_id}")
-async def state(game_id:str) -> StateResponse:
+async def state(game_id:str,  repo:GameRepository=Depends(GameRepository)) -> StateResponse:
     try:
-        repo:GameRepository = GameRepository()
         game:Game = repo.get_game_by_id(game_id)
         return {"state": game.get_state()}
     except KeyError as e:
